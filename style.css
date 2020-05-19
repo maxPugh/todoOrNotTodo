@@ -1,0 +1,243 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display&display=swap");
+
+/* @font-face {
+  font-family: "dropcap";
+  src: url("/font/dropcap.eot");
+  src: url("/font/dropcap.eot?#iefix") format("embedded-opentype"),
+    url("/font/dropcap.woff") format("woff"),
+    url("/font/dropcap.ttf") format("truetype"),
+    url("/font/dropcap.svg#svgFontName") format("svg");
+} */
+
+@font-face {
+  font-family: "dropcap";
+  src: url("font/original.ttf") format("truetype");
+}
+
+body {
+  display: flex;
+  background-color: #fefaf2;
+  margin: 20px 120px 0px 120px;
+}
+
+#flex70 {
+  width: 70%;
+}
+#flex30 {
+  width: 30%;
+  font-family: "Playfair Display", serif;
+}
+
+#dropcap {
+  font-family: "dropcap";
+  font-weight: 100;
+  font-size: 110px;
+  justify-content: center;
+}
+
+#rest {
+  justify-content: center;
+  margin-top: 25px;
+}
+#skullDiv {
+  margin-left: 40px;
+  display: flex;
+}
+#clearDiv,
+#shortcutDiv {
+  margin-left: 70px;
+}
+
+h1 {
+  font-size: 3.3em;
+  display: flex;
+  /* border-bottom: solid 2px black; */
+}
+h2 {
+  padding-left: 40px;
+  font-weight: bold;
+  font-size: 2.5em;
+  margin-bottom: 0px;
+}
+
+#line {
+  width: 50vw;
+  height: 2px;
+  border-top: solid 2px black;
+  margin-top: -33px;
+  margin-bottom: 30px;
+}
+
+#todo-list {
+  margin-left: 20px;
+}
+
+ul {
+  margin-top: 0px;
+}
+
+.ul {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border-left: solid 2px #dac2a0;
+  padding-inline-start: 40px;
+  margin: 12px;
+}
+
+.li {
+  list-style-type: none;
+  margin: 10px 0px 10px 0px;
+  display: flex;
+}
+li {
+  list-style-type: none;
+}
+#command {
+  font-weight: bold;
+  font-size: 25px;
+}
+#info {
+  font-size: 20px;
+}
+
+#icon {
+  justify-content: center;
+}
+
+img {
+  padding-right: 10px;
+}
+
+input,
+input:focus {
+  justify-content: center;
+  background-color: transparent;
+  width: 400px;
+  outline: none;
+  border: 0;
+  font-size: 2em;
+}
+
+input,
+body {
+  font-family: "Playfair Display", serif;
+}
+
+#delete,
+#shortcut,
+#clear {
+  position: absolute;
+  z-index: 3;
+  justify-content: center;
+  background-size: cover;
+  background-color: transparent;
+  border: none;
+  width: 45px;
+  height: 45px;
+  margin-top: 35px;
+  margin-left: 20px;
+}
+
+#delete {
+  background-image: url(images/PNG/012-skull.png);
+}
+#shortcut {
+  background-image: url(images/PNG/024-eye.png);
+}
+#clear {
+  background-image: url(images/PNG/013-crystal.png);
+}
+#deleteShadow,
+#shortcutShadow,
+#clearShadow {
+  position: absolute;
+  z-index: 2;
+  filter: blur(1px);
+  opacity: 0;
+  background-size: cover;
+  width: 45px;
+  height: 45px;
+  margin-top: 35px;
+  margin-left: 20px;
+}
+
+#shortcutIcon {
+  width: 20px;
+  height: 20px;
+  padding-right: 5px;
+}
+
+#deleteShadow {
+  background-image: url(images/PNG/skullshadow.png);
+}
+#shortcutShadow {
+  background-image: url(images/PNG/eyeshadow.png);
+}
+#clearShadow {
+  background-image: url(images/PNG/crystalShadow.png);
+}
+
+#delete:hover,
+#shortcut:hover,
+#clear:hover {
+  animation-name: rise, hovering;
+  animation-duration: 1s, 2s;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards;
+  animation-delay: 0s, 1s;
+  animation-timing-function: ease, ease-in-out;
+}
+
+.addedClass {
+  animation-name: blurRise, blurHover;
+  animation-duration: 1s, 2s;
+  animation-iteration-count: 1, infinite;
+  animation-fill-mode: forwards;
+  animation-delay: 0s, 1s;
+  animation-timing-function: ease, ease-in-out;
+}
+
+@keyframes rise {
+  0% {
+    transform: translate(0px, 0px);
+  }
+
+  100% {
+    transform: translate(-4px, -4px);
+  }
+}
+@keyframes hovering {
+  0% {
+    transform: translate(-4px, -4px);
+  }
+
+  50% {
+    transform: translate(-2.5px, -2.5px);
+  }
+
+  100% {
+    transform: translate(-4px, -4px);
+  }
+}
+
+@keyframes blurRise {
+  0% {
+    filter: blur(1px);
+  }
+  100% {
+    filter: blur(2px);
+  }
+}
+@keyframes blurHover {
+  0% {
+    filter: blur(2px);
+  }
+
+  50% {
+    filter: blur(1px);
+  }
+
+  100% {
+    filter: blur(2px);
+  }
+}
