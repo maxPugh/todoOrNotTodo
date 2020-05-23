@@ -14,13 +14,18 @@
 //* SET THE PREVIOUS
 
 //? ANIMATION ANIMATION
-//! BLUR NEEDS TO START FROM OFFSET AND WORK ITS WAY OUT FROM THERE
+//* FINISH CLICKTODOICON()
 
 //.Function to handle keypressEvents
 function eventHandler(e) {
   //if enter is pressed then end current todo
   if (e.keyCode == 13) {
-    App.createTodo(e);
+    //if shift + enter are pressed
+    if (util.map[13] == true && util.map[16] == true) {
+      App.completeTodo(e);
+    } else {
+      App.createTodo(e);
+    }
   }
   //if  tab is pressed then turn current into nested
   if (e.keyCode == 9) {
@@ -58,7 +63,7 @@ var App = {
       completed: false,
     },
   ],
-  focusedTodoID: 0,
+  focusedTodoID: "first",
   icon: `"images/esoteric/quill.svg"`,
   //.Function that creates todos in the Array based on input
   createTodo: function (e) {
@@ -91,7 +96,7 @@ var App = {
     var htmlString = "";
     function completedTodo() {
       if (todo.completed === true) {
-        return `className = "completed"`;
+        return `style ="text-decoration: line-through; color: grey"`;
       } else {
         return "";
       }
@@ -112,10 +117,10 @@ var App = {
       }
     }
     //the string
-    htmlString = `<li ${completedTodo(todo)} id="${todo.id}" class="li">
+    htmlString = `<li id="${todo.id}" class="li">
                     <div id="icon">
-                    <img src=${icon}>
-                    <input value="${todo.title}">
+                    <img id ="todo-icon-${todo.id}" src=${icon}>
+                    <input ${completedTodo(todo)} value="${todo.title}">
                     ${nestedTodos()}
                     </div>
                   </li>`;
@@ -187,6 +192,16 @@ var App = {
     //Render
     App.renderTodos();
   },
+  completeTodo: function (e) {
+    var id = util.findTodoId(e);
+
+    var todo = util.recurseThis((e) => e.id == id);
+
+    todo.completed = !todo.completed;
+
+    App.renderTodos();
+  },
+  //. Function that completes
   //.Function that renders the newly created todos
   renderTodos: function () {
     var todoList = document.getElementById("todo-list");
@@ -306,6 +321,17 @@ var util = {
 
     return array[c];
   },
+
+  toggleState() {
+    var shortcuts = document.getElementById("flex30");
+    setTimeout(() => {
+      if (shortcuts.style.display == "block" || shortcuts.style.display == "") {
+        shortcuts.style.display = "none";
+      } else {
+        shortcuts.style.display = "block";
+      }
+    }, 150);
+  },
 };
 
 //! THIS IS JUST ALL SHIT TO MAKE IT RUN
@@ -344,11 +370,18 @@ document.getElementById("flex70").addEventListener("mouseout", (e) => {
   }
 });
 
-//. HANDLES CLICKING ANIMATION
+//. HANDLES CLICKING ANIMATION + FUNCTIONS
 document.getElementById("flex70").addEventListener("click", (e) => {
   var el = e.target.id;
   if (el == "shortcut" || el == "delete" || el == "clear") {
     anim.clickIcon(e);
+  }
+  if (el == "shortcut") {
+    util.toggleState();
+  }
+
+  if (el.indexOf("todo-icon") >= 0) {
+    anim.clickTodoIcon(e);
   }
 });
 
@@ -369,24 +402,28 @@ var anim = {
     var eStyle = e.target.style;
     var eShadow = e.target.nextElementSibling.style;
 
-    var style = window.getComputedStyle(e.target);
-    var matrix = new WebKitCSSMatrix(style.webkitTransform);
+    var s = window.getComputedStyle(e.target);
+    var matrix = new WebKitCSSMatrix(s.webkitTransform);
     var offset = Math.round(matrix.m41);
-    //creates a style element
-    var style = document.createElement("style");
-    //attaches it to head if it doesnt exist (button already pressed)
-    if (document.querySelector("style")) {
-    } else {
-      document.head.appendChild(style);
-      //create the animation based on the offset
-      style.innerHTML = `
-        @keyframes click {
-          0% {transform: translate(${offset}px, ${offset}px)}
-          50% {transform: translate(0px, 0px)}
-          100% {transform: translate(${offset}px, ${offset}px)}
-        }
-        `;
+
+    //create the animation if it doesnt already exist
+    var style = document.querySelector("style");
+    //! THIS NEEDS TO BE CHANGED TO BE SPECIFIC ANIMATION BASED ON THE NAME OF THE BUTTON
+    //! OR ELSE THEY ARE ALL SHARING THE SAME OFFSET WHICH IS WRONG WRONG WRONG
+    //! but also this cant be kept as static either
+    //! so technically it does need to be reset every time
+    //! potentially using a specific style element for each button
+    //! that gets updated every call
+    if (!style.innerHTML.indexOf("click")) {
+      style.innerHTML += `
+      @keyframes click {
+        0% {transform: translate(${offset}px, ${offset}px)}
+        50% {transform: translate(0px, 0px)}
+        100% {transform: translate(${offset}px, ${offset}px)}
+      }
+      `;
     }
+
     eStyle.animationName = "click";
     eStyle.animationDuration = "150ms";
     // blur animation wasnt resetting on set timeout and was going out of sync
@@ -405,5 +442,90 @@ var anim = {
       eShadow.animationIterationCount = "infinite";
       eShadow.animationTimingFunction = "ease-in-out";
     }, 150);
+  },
+  clickTodoIcon(e) {
+    //stores current todo position
+    //works out how far that is from the left of the screen
+    // offsets the icon to that position plus width of icon
+    //sets 100% transition to be original position
+    //ease in so it speeds up
+    // hits the text
+    //shakes the text?
+    // todo completes
+
+    //get the offset value for the element
+    var offset = e.target.getBoundingClientRect().left + e.target.width;
+
+    //create the animation
+    var style = document.querySelector("style");
+    var animationName = e.target.id;
+
+    //these animations will be specific to each of the icons
+    if (style.innerHTML.indexOf(animationName) < 0) {
+      style.innerHTML += `
+        @keyframes ${animationName} {
+          0% {transform: translateX(-${offset}px)
+          }
+          40% {
+            transform: translateX(5px)
+          }
+          45% {
+            transform: translateX(-20px)
+          }
+          55% {
+            transform: translateX(-20px)
+          }
+          65% {
+            transform: translateX(-20px)
+          }
+          70% {
+            transform: translateX(0px)
+          }
+          75% {
+            transform: translateX(-10px)
+          }
+          85% {
+            transform: translateX(-10px)
+          }
+          95% {
+            transform: translateX(-10px)
+          }
+
+          100% {
+            transform: translateX(0px)
+          }
+        }
+      `;
+    }
+    //add all of the animation css to the element style
+    var eStyle = e.target.style;
+
+    eStyle.animationName = `${animationName}`;
+    eStyle.animationDuration = "700ms";
+    eStyle.animationTimingFunction = "ease-out";
+
+    var id = e.target.closest("li").id;
+
+    setTimeout(() => {
+      var todo = util.recurseThis((e) => e.id == id);
+      todo.completed = !todo.completed;
+
+      if (e.target.nextElementSibling.style.textDecoration == "line-through") {
+        e.target.nextElementSibling.style.textDecoration = "";
+      } else {
+        e.target.nextElementSibling.style.textDecoration = "line-through";
+      }
+
+      if (e.target.nextElementSibling.style.color === "grey") {
+        e.target.nextElementSibling.style.color = "";
+      } else {
+        e.target.nextElementSibling.style.color = "grey";
+      }
+    }, 280);
+
+    //unset the animation
+    setTimeout(() => {
+      eStyle.animationName = "";
+    }, 700);
   },
 };

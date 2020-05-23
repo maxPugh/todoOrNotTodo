@@ -24,6 +24,7 @@ body {
   width: 70%;
 }
 #flex30 {
+  display: block;
   width: 30%;
   font-family: "Playfair Display", serif;
 }
@@ -87,7 +88,6 @@ ul {
 .li {
   list-style-type: none;
   margin: 10px 0px 10px 0px;
-  display: flex;
 }
 li {
   list-style-type: none;
@@ -100,22 +100,14 @@ li {
   font-size: 20px;
 }
 
-#icon {
-  justify-content: center;
-}
-
-img {
-  padding-right: 10px;
-}
-
 input,
 input:focus {
-  justify-content: center;
+  vertical-align: super;
   background-color: transparent;
   width: 400px;
   outline: none;
   border: 0;
-  font-size: 2em;
+  font-size: 1.5em;
 }
 
 input,
@@ -239,5 +231,14 @@ body {
 
   100% {
     filter: blur(2px);
+  }
+}
+
+@keyframes rotate {
+  0% {
+    transform: rotate(0);
+  }
+  100% {
+    transform: rotate(360deg);
   }
 }
