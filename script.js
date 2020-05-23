@@ -4,7 +4,11 @@
 //* WHEN PRESSING ENTER, CREATE NEW EMPTY TODO AND FOCUS ON IT
 //* WHEN PRESSING TAB, NEST THE CURRENT TODO IN THE PREVIOUS ONE
 //* WHEN PRESSING SHIFT + TAB, UNNEST THE CURRENT TODO
-//! WHEN PRESSING SHIFT + ENTER CREATE A NEW UNNESTED TODO
+//* WHEN PRESSING SHIFT + ENTER CREATE A NEW UNNESTED TODO
+//! WRITE FUNCTION TO HANDLE DELETION OF COMPLETED TODOS
+//! LINK IT TO BUTTON CLICK
+//! HANDLE LOCAL STORAGE INTEGRATION WITH A SET AND GET FUNCTION STORAGE(SET,GET)
+//! LINK DELETION OF ALL DATA TO BUTTON
 
 //* WHEN BACKSPACE IS PRESSED ON AN EMPTY TODO IT WILL DELETE THAT TODO AND GO TO LINE END OF PREVIOUS TODO
 //* MAKE SURE THAT FOCUS IS ON LINE END
@@ -199,13 +203,52 @@ var App = {
 
     todo.completed = !todo.completed;
 
-    App.renderTodos();
+    var style = e.target.style;
+    if (todo.completed) {
+      style.textDecoration = "line-through";
+      style.color = "grey";
+    } else {
+      style.textDecoration = "";
+      style.color = "";
+    }
+
+    var state = todo.completed;
+
+    if (todo.nested.length > 0) {
+      for (const t of todo.nested) {
+        R(t);
+      }
+
+      function R(todo) {
+        //RECURSIVE CASE
+        if (todo.nested.length > 0) {
+          for (const t of todo.nested) {
+            R(t);
+          }
+        }
+        //BASE CASE
+        todo.completed = state;
+
+        if (todo.completed) {
+          style.textDecoration = "line-through";
+          style.color = "grey";
+        } else {
+          style.textDecoration = "";
+          style.color = "";
+        }
+      }
+    }
+
+    //check completed could have been integrated into this function and this function cleaned up
+    //if i refactor then i might do this
+    util.checkCompleted();
   },
   //. Function that completes
   //.Function that renders the newly created todos
   renderTodos: function () {
     var todoList = document.getElementById("todo-list");
     var htmlString = "";
+
     //loop through each todo
     App.todos.forEach((todo) => {
       var current = App.generateTodo(todo, App.icon);
@@ -213,6 +256,9 @@ var App = {
     });
     //set the inner html to the created string
     todoList.innerHTML = htmlString;
+
+    //work out completed tree
+    util.checkCompleted();
     //sort out which todo should have focus
     if (App.focusedTodoID) {
       util.findInput(App.focusedTodoID).focus();
@@ -321,7 +367,6 @@ var util = {
 
     return array[c];
   },
-
   toggleState() {
     var shortcuts = document.getElementById("flex30");
     setTimeout(() => {
@@ -332,58 +377,52 @@ var util = {
       }
     }, 150);
   },
+  checkCompleted() {
+    //this function has gone through some iterations
+    // initially it relied on rendertodos and thus generate todos to handle the styling change
+    // what this meant was that the todos were being repainted during the animation settimeout delay for button press on todo icon
+    // this lead to the animation being cut short
+    // so what i did was changed the styling 'on the fly' so i didnt need to wait for a rerender
+    // the same applies to completeTodo()
+    App.todos.forEach((todo) => {
+      R(todo);
+    });
+
+    function R(todo) {
+      var counter = 0;
+      if (todo.nested.length > 0) {
+        for (const t of todo.nested) {
+          if (t.nested.length > 0) {
+            R(t);
+          }
+          //the base case has to come after to recursive
+          // as the recursive case can potentially modifies t.completed
+          t.completed === true ? counter++ : null;
+          var style = util.findInput(t.id).style;
+          if (t.completed) {
+            style.textDecoration = "line-through";
+            style.color = "grey";
+          } else {
+            style.textDecoration = "";
+            style.color = "";
+          }
+        }
+        todo.nested.length === counter
+          ? (todo.completed = true)
+          : (todo.completed = false);
+
+        var style = util.findInput(todo.id).style;
+        if (todo.completed) {
+          style.textDecoration = "line-through";
+          style.color = "grey";
+        } else {
+          style.textDecoration = "";
+          style.color = "";
+        }
+      }
+    }
+  },
 };
-
-//! THIS IS JUST ALL SHIT TO MAKE IT RUN
-var i = document.getElementById("todo-list");
-i.addEventListener("keydown", (e) => {
-  util.keyDown(e);
-  eventHandler(e);
-});
-i.addEventListener("keyup", (e) => {
-  util.keyUp(e);
-  util.saveTodoValue(e);
-  util.backspaceCounter(e);
-});
-App.renderTodos();
-document.getElementById("first").childNodes[1].childNodes[3].focus();
-//! ------------------------------------
-
-//. HOVER ANIMATION ON MOUSEOVER
-document.getElementById("flex70").addEventListener("mouseover", (e) => {
-  var el = e.target.id;
-  if (el == "shortcut" || el == "delete" || el == "clear") {
-    anim.showShadow(e);
-  }
-});
-
-//. REMOVAL OF SHADOW ON MOUSEOUT
-document.getElementById("flex70").addEventListener("mouseout", (e) => {
-  var el = e.target.id;
-  if (el == "shortcut" || el == "delete" || el == "clear") {
-    anim.hideShadow(e);
-
-    //this line makes sure that the follow up animation to a click are deleted on mouseout
-    // so that normal functioning will happen on hover
-    e.target.style = "";
-    e.target.nextElementSibling.style = "";
-  }
-});
-
-//. HANDLES CLICKING ANIMATION + FUNCTIONS
-document.getElementById("flex70").addEventListener("click", (e) => {
-  var el = e.target.id;
-  if (el == "shortcut" || el == "delete" || el == "clear") {
-    anim.clickIcon(e);
-  }
-  if (el == "shortcut") {
-    util.toggleState();
-  }
-
-  if (el.indexOf("todo-icon") >= 0) {
-    anim.clickTodoIcon(e);
-  }
-});
 
 var anim = {
   showShadow(e) {
@@ -408,12 +447,7 @@ var anim = {
 
     //create the animation if it doesnt already exist
     var style = document.querySelector("style");
-    //! THIS NEEDS TO BE CHANGED TO BE SPECIFIC ANIMATION BASED ON THE NAME OF THE BUTTON
-    //! OR ELSE THEY ARE ALL SHARING THE SAME OFFSET WHICH IS WRONG WRONG WRONG
-    //! but also this cant be kept as static either
-    //! so technically it does need to be reset every time
-    //! potentially using a specific style element for each button
-    //! that gets updated every call
+
     if (!style.innerHTML.indexOf("click")) {
       style.innerHTML += `
       @keyframes click {
@@ -504,23 +538,10 @@ var anim = {
     eStyle.animationDuration = "700ms";
     eStyle.animationTimingFunction = "ease-out";
 
-    var id = e.target.closest("li").id;
-
+    //this will apply the todo styling at the desired delay
+    // in this case it is once the animation "hits" the element so at 40% animation
     setTimeout(() => {
-      var todo = util.recurseThis((e) => e.id == id);
-      todo.completed = !todo.completed;
-
-      if (e.target.nextElementSibling.style.textDecoration == "line-through") {
-        e.target.nextElementSibling.style.textDecoration = "";
-      } else {
-        e.target.nextElementSibling.style.textDecoration = "line-through";
-      }
-
-      if (e.target.nextElementSibling.style.color === "grey") {
-        e.target.nextElementSibling.style.color = "";
-      } else {
-        e.target.nextElementSibling.style.color = "grey";
-      }
+      App.completeTodo(e);
     }, 280);
 
     //unset the animation
@@ -529,3 +550,54 @@ var anim = {
     }, 700);
   },
 };
+
+//! THIS IS JUST ALL SHIT TO MAKE IT RUN
+var i = document.getElementById("todo-list");
+i.addEventListener("keydown", (e) => {
+  util.keyDown(e);
+  eventHandler(e);
+});
+i.addEventListener("keyup", (e) => {
+  util.keyUp(e);
+  util.saveTodoValue(e);
+  util.backspaceCounter(e);
+});
+App.renderTodos();
+document.getElementById("first").childNodes[1].childNodes[3].focus();
+//! ------------------------------------
+
+//. HOVER ANIMATION ON MOUSEOVER
+document.getElementById("flex70").addEventListener("mouseover", (e) => {
+  var el = e.target.id;
+  if (el == "shortcut" || el == "delete" || el == "clear") {
+    anim.showShadow(e);
+  }
+});
+
+//. REMOVAL OF SHADOW ON MOUSEOUT
+document.getElementById("flex70").addEventListener("mouseout", (e) => {
+  var el = e.target.id;
+  if (el == "shortcut" || el == "delete" || el == "clear") {
+    anim.hideShadow(e);
+
+    //this line makes sure that the follow up animation to a click are deleted on mouseout
+    // so that normal functioning will happen on hover
+    e.target.style = "";
+    e.target.nextElementSibling.style = "";
+  }
+});
+
+//. HANDLES CLICKING ANIMATION + FUNCTIONS
+document.getElementById("flex70").addEventListener("click", (e) => {
+  var el = e.target.id;
+  if (el == "shortcut" || el == "delete" || el == "clear") {
+    anim.clickIcon(e);
+  }
+  if (el == "shortcut") {
+    util.toggleState();
+  }
+
+  if (el.indexOf("todo-icon") >= 0) {
+    anim.clickTodoIcon(e);
+  }
+});
