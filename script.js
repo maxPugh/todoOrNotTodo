@@ -5,10 +5,10 @@
 //* WHEN PRESSING TAB, NEST THE CURRENT TODO IN THE PREVIOUS ONE
 //* WHEN PRESSING SHIFT + TAB, UNNEST THE CURRENT TODO
 //* WHEN PRESSING SHIFT + ENTER CREATE A NEW UNNESTED TODO
-//! WRITE FUNCTION TO HANDLE DELETION OF COMPLETED TODOS
-//! LINK IT TO BUTTON CLICK
+//* WRITE FUNCTION TO HANDLE DELETION OF COMPLETED TODOS
+//* LINK IT TO BUTTON CLICK
+//* HANDLE DELETE ALL AND ALSO BUTTON CLICK
 //! HANDLE LOCAL STORAGE INTEGRATION WITH A SET AND GET FUNCTION STORAGE(SET,GET)
-//! LINK DELETION OF ALL DATA TO BUTTON
 
 //* WHEN BACKSPACE IS PRESSED ON AN EMPTY TODO IT WILL DELETE THAT TODO AND GO TO LINE END OF PREVIOUS TODO
 //* MAKE SURE THAT FOCUS IS ON LINE END
@@ -203,7 +203,7 @@ var App = {
 
     todo.completed = !todo.completed;
 
-    var style = e.target.style;
+    var style = e.target.nextElementSibling.style;
     if (todo.completed) {
       style.textDecoration = "line-through";
       style.color = "grey";
@@ -367,7 +367,7 @@ var util = {
 
     return array[c];
   },
-  toggleState() {
+  toggleShortcuts() {
     var shortcuts = document.getElementById("flex30");
     setTimeout(() => {
       if (shortcuts.style.display == "block" || shortcuts.style.display == "") {
@@ -418,6 +418,33 @@ var util = {
         } else {
           style.textDecoration = "";
           style.color = "";
+        }
+      }
+    }
+  },
+  clearCompleted() {
+    App.todos.forEach((todo, index, array) => {
+      if (todo.completed && todo.id == "first") {
+        todo.title = "";
+        todo.completed = false;
+        App.focusedTodoID = "first";
+      }
+      if (todo.completed && todo.id !== "first") {
+        array.splice(index, 1);
+      } else if (todo.nested.length > 0) {
+        R(todo);
+      }
+    });
+    function R(todo) {
+      var t = todo.nested;
+      //uses for loop so i can control i's value
+      for (let i = 0; i < t.length; i++) {
+        if (t[i].completed) {
+          t.splice(i, 1);
+          //handles shift down
+          i--;
+        } else if (t[i].nested.length > 0) {
+          R(t[i]);
         }
       }
     }
@@ -590,13 +617,35 @@ document.getElementById("flex70").addEventListener("mouseout", (e) => {
 //. HANDLES CLICKING ANIMATION + FUNCTIONS
 document.getElementById("flex70").addEventListener("click", (e) => {
   var el = e.target.id;
+  // handle animation for buttons
   if (el == "shortcut" || el == "delete" || el == "clear") {
     anim.clickIcon(e);
   }
+
+  //shortcut toggle
   if (el == "shortcut") {
-    util.toggleState();
+    util.toggleShortcuts();
   }
 
+  //clear completed button
+  if (el == "clear") {
+    util.clearCompleted();
+    App.renderTodos();
+  }
+
+  //click delete
+  if (el == "delete") {
+    App.todos = [];
+    App.todos.push({
+      id: "first",
+      title: "",
+      nested: [],
+      completed: false,
+    });
+    App.focusedTodoID = "first";
+    App.renderTodos();
+  }
+  //todo icon click
   if (el.indexOf("todo-icon") >= 0) {
     anim.clickTodoIcon(e);
   }
