@@ -8,7 +8,8 @@
 //* WRITE FUNCTION TO HANDLE DELETION OF COMPLETED TODOS
 //* LINK IT TO BUTTON CLICK
 //* HANDLE DELETE ALL AND ALSO BUTTON CLICK
-//! HANDLE LOCAL STORAGE INTEGRATION WITH A SET AND GET FUNCTION STORAGE(SET,GET)
+//* HANDLE LOCAL STORAGE INTEGRATION WITH A SET AND GET FUNCTION STORAGE(SET,GET)
+//! BUTTON ON HOVER SHOW THE BUTTON TITLE SOMEWHERE
 
 //* WHEN BACKSPACE IS PRESSED ON AN EMPTY TODO IT WILL DELETE THAT TODO AND GO TO LINE END OF PREVIOUS TODO
 //* MAKE SURE THAT FOCUS IS ON LINE END
@@ -119,7 +120,10 @@ var util = {
   //. saves the value of the todo
   saveTodoValue: function (e) {
     var li = e.target.closest("li");
-    util.recurseThis((e) => e.id == li.id).title = e.target.value.trim();
+    util.recurseThis((e) => e.id == li.id).title = e.target.value
+      .replace(/"/g, `'`)
+      .replace(/[<>]/g, "")
+      .trim();
     util.storage("todo-list", App.todos);
   },
   //. Return the todo that fits the criteria of the callback
@@ -534,6 +538,11 @@ var anim = {
     //shakes the text?
     // todo completes
 
+    //handles clicking on empty todos
+    if (!e.target.nextElementSibling.value) {
+      return 0;
+    }
+
     //get the offset value for the element
     var offset = e.target.getBoundingClientRect().left + e.target.width;
 
@@ -612,7 +621,6 @@ i.addEventListener("keyup", (e) => {
   util.backspaceCounter(e);
 });
 App.renderTodos();
-// document.getElementById("first").childNodes[1].childNodes[3].focus();
 //! ------------------------------------
 
 //. HOVER ANIMATION ON MOUSEOVER
@@ -620,6 +628,15 @@ document.getElementById("flex70").addEventListener("mouseover", (e) => {
   var el = e.target.id;
   if (el == "shortcut" || el == "delete" || el == "clear") {
     anim.showShadow(e);
+    if (el == "shortcut") {
+      document.getElementById("short").style.opacity = "1";
+    }
+    if (el == "delete") {
+      document.getElementById("del").style.opacity = "1";
+    }
+    if (el == "clear") {
+      document.getElementById("clr").style.opacity = "1";
+    }
   }
 });
 
@@ -633,6 +650,16 @@ document.getElementById("flex70").addEventListener("mouseout", (e) => {
     // so that normal functioning will happen on hover
     e.target.style = "";
     e.target.nextElementSibling.style = "";
+
+    if (el == "shortcut") {
+      document.getElementById("short").style.opacity = "0";
+    }
+    if (el == "delete") {
+      document.getElementById("del").style.opacity = "0";
+    }
+    if (el == "clear") {
+      document.getElementById("clr").style.opacity = "0";
+    }
   }
 });
 
