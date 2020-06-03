@@ -85,7 +85,7 @@ h2 {
 }
 
 #line {
-  width: 45vw;
+  width: 47vw;
   height: 2px;
   border-top: solid 2px black;
   margin-top: -33px;
@@ -98,6 +98,11 @@ h2 {
 
 ul {
   margin-top: 0px;
+}
+
+#spacer {
+  height: 20px;
+  width: 40px;
 }
 
 .ul {
