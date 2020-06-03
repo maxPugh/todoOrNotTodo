@@ -17,6 +17,8 @@
 //* EVENT LISTENER ON KEY PRESS TO SAVE CURRENT VALUE TO INPUT
 //* SOLVE ISSUE WHERE IF YOURE HOLDING DOWN BACKSPACE IT WILL AUTO GO TO NEXT LINE AND START DELETING
 //* SET THE PREVIOUS
+//! ON HOVER OF INPUT SHOW A SMALL DELETE BUTTON THAT CAN BE CLICKED
+//! DELETEBUTTON SLOWLY MOVES ACROSS THE INPUT DELETING LETTERS AS IT GOES
 
 //? ANIMATION ANIMATION
 //* FINISH CLICKTODOICON()
@@ -330,6 +332,9 @@ var App = {
                     <div id="icon">
                     <img id ="todo-icon-${todo.id}" src=${icon}>
                     <input ${completedTodo(todo)} value="${todo.title}">
+                    <img id="deleteButton" class="${
+                      todo.id
+                    }" src="images/PNG/012-skull.png">
                     ${nestedTodos()}
                     </div>
                   </li>`;
@@ -386,9 +391,19 @@ var App = {
   //.Deletes current todo
   deleteTodo: function (e) {
     //find todo id
-    var id = util.findTodoId(e);
+    var id;
+    if (e.id) {
+      id = e.id;
+    } else {
+      id = util.findTodoId(e);
+    }
     //prevent deletion of main todo
     if (id === "first") {
+      var todo = util.recurseThis((el) => el.id == id);
+      todo.title = "";
+      if (todo.nested.length > 0) {
+        todo.nested = [];
+      }
       return 0;
     }
     //find todo array
@@ -495,6 +510,7 @@ var anim = {
     var s = window.getComputedStyle(e.target);
     var matrix = new WebKitCSSMatrix(s.webkitTransform);
     var offset = Math.round(matrix.m41);
+    console.log(matrix);
 
     //create the animation if it doesnt already exist
     var style = document.querySelector("style");
@@ -605,6 +621,79 @@ var anim = {
       eStyle.animationName = "";
     }, 700);
   },
+  crazyDelete(e) {
+    //find the input
+    //create new div with the ID test
+    //set div.innerText to input.value
+    // set the font the same and also the font size
+    //measure div width with .clientWidth
+    //find input left value with .getClientRect().left
+    //add input left to div width to find position of final character
+    //use set interval to run function to check position every 10ms
+    //if position of animation is within 5px +or- of final character position
+    // delete final character
+    // run function again
+    //if input.value === "" then delete todo
+    // rerender
+
+    var li = e.target.closest("li");
+    //. ANIMATION TIME IN MS
+    var time = 200;
+    //. -------------------
+    var newStyle = document.getElementById("newStyle");
+
+    newStyle.innerHTML = `
+              @keyframes deleteAnim {
+                0% {transform: translateX(0px)}
+                100%{transform: translateX(-400px)}
+              }
+    `;
+    e.target.style.animationName = "deleteAnim";
+    e.target.style.animationDuration = time + "ms";
+
+    //resets style back
+    setTimeout(() => {
+      newStyle.innerHTML = "";
+      e.target.style.animationName = "";
+    }, time);
+
+    var s = window.getComputedStyle(e.target);
+    var matrix = new WebKitCSSMatrix(s.webkitTransform);
+    var offset = Math.round(matrix.m41);
+
+    //runs to check animation position and edit input value accordingly
+    var input = e.target.previousElementSibling;
+
+    var inputLength = input.value.length;
+    counter = 0;
+    var checker = setInterval(() => {
+      if (counter !== inputLength) {
+        var temp = document.getElementById("test");
+        temp.innerText = input.value;
+        //width of the text inside the input box
+        var width = temp.clientWidth;
+
+        //gotta calculate this as it happens
+        var s = window.getComputedStyle(e.target);
+        var matrix = new WebKitCSSMatrix(s.webkitTransform);
+        var offset = Math.round(matrix.m41) * -1;
+
+        //if delete icon has travelled 10px past the last character
+        if (input.clientWidth - offset < width) {
+          input.value = input.value.slice(0, input.value.length - 1);
+          counter++;
+        }
+      } else if (counter === inputLength) {
+        App.deleteTodo(li);
+        App.renderTodos();
+        counter++;
+      }
+      if (counter > inputLength) {
+        //IF YOU DONT CLEAR INTERVAL, when it is next iterated it will use the original arguments the first time it was called
+        clearInterval(checker);
+      }
+    }, 1);
+  },
 };
 
 //! THIS IS JUST ALL SHIT TO MAKE IT RUN
@@ -624,8 +713,9 @@ App.renderTodos();
 //! ------------------------------------
 
 //. HOVER ANIMATION ON MOUSEOVER
-document.getElementById("flex70").addEventListener("mouseover", (e) => {
+document.getElementById("body").addEventListener("mouseover", (e) => {
   var el = e.target.id;
+  var tag = e.target.tagName;
   if (el == "shortcut" || el == "delete" || el == "clear") {
     anim.showShadow(e);
     if (el == "shortcut") {
@@ -638,11 +728,16 @@ document.getElementById("flex70").addEventListener("mouseover", (e) => {
       document.getElementById("clr").style.opacity = "1";
     }
   }
+  if (el == "icon" || tag == "INPUT" || el == "deleteButton") {
+    var button = e.target.closest("li").querySelector("#deleteButton");
+    button.style.opacity = "1";
+  }
 });
 
 //. REMOVAL OF SHADOW ON MOUSEOUT
-document.getElementById("flex70").addEventListener("mouseout", (e) => {
+document.getElementById("body").addEventListener("mouseout", (e) => {
   var el = e.target.id;
+  var tag = e.target.tagName;
   if (el == "shortcut" || el == "delete" || el == "clear") {
     anim.hideShadow(e);
 
@@ -660,6 +755,10 @@ document.getElementById("flex70").addEventListener("mouseout", (e) => {
     if (el == "clear") {
       document.getElementById("clr").style.opacity = "0";
     }
+  }
+  if (el == "icon" || tag == "INPUT" || el == "deleteButton") {
+    var button = e.target.closest("li").querySelector("#deleteButton");
+    button.style.opacity = "0";
   }
 });
 
@@ -699,6 +798,10 @@ document.getElementById("flex70").addEventListener("click", (e) => {
   //todo icon click
   if (el.indexOf("todo-icon") >= 0) {
     anim.clickTodoIcon(e);
+  }
+  //deleteButton click
+  if (el == "deleteButton") {
+    anim.crazyDelete(e);
   }
 });
 // });
