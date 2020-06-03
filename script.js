@@ -638,7 +638,7 @@ var anim = {
 
     var li = e.target.closest("li");
     //. ANIMATION TIME IN MS
-    var time = 200;
+    var time = 400;
     //. -------------------
     var newStyle = document.getElementById("newStyle");
 
